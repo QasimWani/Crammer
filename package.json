@@ -24,5 +24,24 @@
   "bugs": {
     "url": "https://github.com/QasimWani/Crammer/issues"
   },
-  "homepage": "https://github.com/QasimWani/Crammer#readme"
+  "homepage": "https://github.com/QasimWani/Crammer#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cloudinary": "^1.16.0",
+    "cluster": "^0.7.7",
+    "compression": "^1.7.4",
+    "dotenv": "^8.2.0",
+    "ejs": "^2.7.1",
+    "express": "^4.17.1",
+    "express-http-to-https": "^1.1.4",
+    "express-sanitizer": "^1.0.5",
+    "express-session": "^1.17.0",
+    "memorystore": "^1.6.1",
+    "method-override": "^3.0.0",
+    "moment": "^2.24.0",
+    "mongoose": "^5.7.7",
+    "multer": "^1.4.2",
+    "nodemailer": "^6.3.1",
+    "request": "^2.88.0"
+  }
 }
