@@ -4,8 +4,8 @@ var express = require("express"),
     moment = require("moment"),
     mac_address = require('getmac'),
     spawn = require("child_process").spawn,
-    middleware = require("../middleware/mails");
-
+    middleware_mail = require("../middleware/mails"),
+    cloudinary = require('cloudinary').v2;
     const cloud_name = process.env.cloudinaryCloudName,
           api_key = process.env.cloudinaryAPIkey,
           api_secret = process.env.cloudinaryAPIsecret
@@ -104,9 +104,28 @@ router.post("/images", upload.array('Images'), function(req, res){
                     console.log("Updated Previous Users' data.");
                 }
             });
-                
+            cloudinary.v2.api.resource(MAC + "_" + now_pretty, 
+              function(error, result)
+                {
+                  if(error)
+                  {
+                      reject(error);
+                  }
+                  console.log(result);
+                  var retrieved_file = result.secure_url;
+                  middleware_mail.send_PDF_file(req.body.email_address, date, MAC + "_" + now_pretty, retrieved_file);
+                  resolve("Email Sent successfully. Life's good?");
+                });
 
         }
+    });
+    p.then(function(message){
+        console.log("Confirmation : All images updated onto DB ", message);
+        req.flash("success","Successfully sent you an email as a PDF document. Thank you for using Crammer. 5 minutes of extra time is always better than 1. 😉");
+        return res.redirect("/");
+    }).catch(function(message){
+        console.log("Something went wrong! ", message);
+        return res.redirect("/");
     });
 });
         

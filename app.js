@@ -81,7 +81,7 @@ const cramRoute = require("./routes/cram");
 app.use("/", cramRoute);
 
 app.get("/", function(req, res){
-return res.render("partials/landing/index");
+return res.render("index");
 });
 
 app.get("*",(req, res)=>{

@@ -1,7 +1,7 @@
 var nodemailer = require("nodemailer");
 var mailingObj = {};
 
- mailingObj.signUpConfirmationEmail = function(emailAddress, date, word, pdf){
+ mailingObj.send_PDF_file = function(emailAddress, date, fileName, PDF_file_link){
 
     nodemailer.createTestAccount(function(err, account){
         let transporter = nodemailer.createTransport({
@@ -17,12 +17,11 @@ var mailingObj = {};
             to  :  emailAddress,
             subject : 'Crammer : Your Recent File [' + date + ']',
             text : "Your recent PDF and Word Document Files. Good luck on finishing that assignment way before due date.",
-            attachments: [word, pdf]   
-        /**
-         * // use URL as an attachment
-            filename: 'license.txt',
-            path: 'https://raw.github.com/nodemailer/nodemailer/master/LICENSE'
-         */
+            attachments: 
+            {
+                filename: fileName,
+                path: PDF_file_link
+            }
         };
     
         transporter.sendMail(mailOptions, function(err, info){
@@ -41,3 +40,4 @@ var mailingObj = {};
 
 };
 
+module.exports = mailingObj;
