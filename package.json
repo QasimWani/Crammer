@@ -1,0 +1,28 @@
+{
+  "name": "crammer",
+  "version": "1.0.0",
+  "description": "Save that extra 5 minutes from Procrastination by automatically bundling images and converting it into word/PDF that's sent to your email with one click of a button.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QasimWani/Crammer.git"
+  },
+  "keywords": [
+    "PWA",
+    "Node.js",
+    "Python",
+    "Photo",
+    "Sharing",
+    "Converstion",
+    "Platform"
+  ],
+  "author": "Qasim Wani",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/QasimWani/Crammer/issues"
+  },
+  "homepage": "https://github.com/QasimWani/Crammer#readme"
+}
