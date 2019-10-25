@@ -37,6 +37,7 @@
     "express-http-to-https": "^1.1.4",
     "express-sanitizer": "^1.0.5",
     "express-session": "^1.17.0",
+    "getmac": "^1.4.6",
     "memorystore": "^1.6.1",
     "method-override": "^3.0.0",
     "moment": "^2.24.0",

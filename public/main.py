@@ -1,15 +1,29 @@
 from fpdf import FPDF
 import os
 import sys
+import cloudinary
 import subprocess
+import cloudinary.uploader
+import cloudinary.api
+
+cloudinary.config( 
+  cloud_name = sys.argv[4], 
+  api_key = sys.argv[5], 
+  api_secret = sys.argv[6] 
+)
+
 pdf = FPDF('P','mm','A4')
 # imagelist is the list with all image filenames
 x,y,w,h = 0,0,200,250
-for image in sys.argv[0]:
+for image in sys.argv[1]:
     pdf.add_page()
     pdf.image(image,x,y,w,h)
-pdf.output("yourfile.pdf", "F")
+title = sys.argv[2] + "_" + sys.argv[3]
+assignment_file = pdf.output(title +".pdf", "F")
 
+cloudinary.uploader.upload(assignment_file, public_id = title)
+
+print(title)
 
 # PDF to Word
 
