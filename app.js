@@ -5,15 +5,16 @@ const express = require("express"),
       moment  = require("moment"),
       compression = require('compression');
       request = require("request"),
-      mailingSystem = require("./middleware/mailingSystemFunctions"),
+      mailingSystem = require("./middleware/mails"),
       methodOverride    = require("method-override"),
       cookieSession     = require("cookie-session"),
       dotenv        = require("dotenv"),
       Account    = require("./models/account"),
+      passport = require("passport"),
       expressSanitizer = require('express-sanitizer'),
       app = express();
 
-      
+app.use(flash());       
 dotenv.config();
 app.use(compression());
 app.use(expressSanitizer());
@@ -63,7 +64,7 @@ mongoose.set('useCreateIndex', true);
 mongoose.set('useFindAndModify', false);
 
 mongoose.Promise = global.Promise;
-mongoose.connect("mongodb://"+process.env.mongoDB_Connect+"/crammer",{ useNewUrlParser: true });
+mongoose.connect("mongodb://"+process.env.mongoDB_Connect+"/crammer",{ useNewUrlParser: true, useUnifiedTopology: true});
 
 app.use(function(req, res, next){
     res.locals.currentUser = req.user;
@@ -77,17 +78,19 @@ app.use(function(req, res, next){
 
 
 const cramRoute = require("./routes/cram");
+app.set('trust proxy', true);
 
 app.use("/", cramRoute);
 
 app.get("/", function(req, res){
-return res.render("index");
+return res.render("index", {err: ''});
 });
 
-app.get("*",(req, res)=>{
-    res.render("partials/error");
-  });
-  
+// app.get("*",(req, res)=>{
+//     res.render("partials/error");
+//   });
+
+
   var server = app.listen(process.env.PORT || 2718, process.env.IP,()=>{
     console.log("Crammer Server Connected");
   });

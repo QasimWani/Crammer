@@ -8,5 +8,5 @@ var Account_Schema = new mongoose.Schema({
     images_taken : Number,
     last_used : String
 });
-RetractSchema.plugin(passportLocalMongoose);
+Account_Schema.plugin(passportLocalMongoose);
 module.exports = mongoose.model("Account", Account_Schema);
