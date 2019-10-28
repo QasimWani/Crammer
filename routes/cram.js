@@ -85,6 +85,39 @@ if(req.files == undefined)
         
         
         doc = new PDFDocument();
+
+        /**
+         * Cloudinary Alternative...
+        */
+        //************************
+        var cloudinary_links = [];
+        files.forEach(async(one)=>{
+            await cloudinary.v2.uploader.upload(one, async(err, result)=>{
+                if(err)
+                {
+                    console.log("Error noticed when uploading image to cloudinary.", error);
+                    return res.redirect("/");
+                }
+                else
+                {
+                    var new_cloudinary_image = result.secure_url;
+                    
+                    console.log(new_cloudinary_image);
+                   sizeOf(one, function (err, dimensions) {
+                        var width = dimensions.width,
+                            height = dimensions.height;
+                        if(width < height)
+                        {
+                            new_cloudinary_image = new_cloudinary_image.split("/image/upload")[0] + "/image/upload/a_270" + new_cloudinary_image.split("/image/upload")[1];
+                        }
+                        cloudinary_links.push(new_cloudinary_image);
+                        console.log(cloudinary_links);
+                    });
+                }
+            });
+        });
+        console.log("Plz work?");
+        console.log(cloudinary_links);        
         var new_files = [];
         req.files.forEach((one)=>{
             one = one.path;
@@ -128,13 +161,6 @@ if(req.files == undefined)
         //Add an image, constrain it to a given size, and center it vertically and horizontally 
         for(var i = 0; i < new_files.length; i++)
         {
-            var width = 0,
-                height = 0;
-            sizeOf(new_files[i], function async(err, dimensions) {
-                width = dimensions.width;
-                height = dimensions.height;
-            });
-                console.log(width, height);
                 doc.image(new_files[i], {
                     fit: [500, 500],
                     align: 'center',
@@ -142,11 +168,6 @@ if(req.files == undefined)
                     rotate:90
                     });
                     doc.rotate(90, {origin : [0, 0]});
-                if(height < width)
-                {
-                    console.log("In here");
-                    
-                }
                 doc.addPage();
                 doc.moveDown();
         }
@@ -177,9 +198,9 @@ if(req.files == undefined)
         });
 
         doc.end();
-        files.forEach((path)=>{
-            deleteFile(path);
-        });
+        // files.forEach((path)=>{
+        //     deleteFile(path);
+        // });
         //***********************/
         // function to encode file data to base64 encoded string
         
