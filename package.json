@@ -4,7 +4,8 @@
   "description": "Save that extra 5 minutes from Procrastination by automatically bundling images and converting it into word/PDF that's sent to your email with one click of a button.",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
   },
   "repository": {
     "type": "git",
@@ -15,6 +16,7 @@
     "Node.js",
     "Python",
     "Photo",
+    "PDF",
     "Sharing",
     "Converstion",
     "Platform"
@@ -42,6 +44,9 @@
     "express-session": "^1.17.0",
     "fs": "0.0.1-security",
     "getmac": "^1.4.6",
+    "gm": "^1.23.1",
+    "graphicsmagick": "0.0.1",
+    "image-size": "^0.8.3",
     "jimp": "^0.8.5",
     "jspdf": "^1.5.3",
     "memorystore": "^1.6.1",
