@@ -10,6 +10,7 @@ var express = require("express"),
     fs = require("fs"),
     PDFDocument = require('pdfkit'),
     Jimp = require("jimp"),
+    request = require("request").defaults({ encoding: null }),
     sizeOf = require("image-size"),
     cloudinary = require('cloudinary');
     const cloud_name = process.env.cloudinary_cloud_name,
@@ -92,140 +93,188 @@ if(req.files == undefined)
         //************************
         //Pipe its output somewhere, like to a file or HTTP response 
         //See below for browser usage 
-        doc.pipe(fs.createWriteStream('public/uploads/'+req.body.assignment_name + '.pdf'));
+        //doc.pipe(fs.createWriteStream('public/uploads/'+req.body.assignment_name + '.pdf'));
         var header = req.body.assignment_name + ", " + date;
-        doc.fontSize(16);
+        //doc.fontSize(16);
 
-        doc.text(header,
-            {
-                width: 410,
-                align: 'center'
-            });
-        doc.moveDown();
+        // doc.text(header,
+        //     {
+        //         width: 410,
+        //         align: 'center'
+        //     });
+        // doc.moveDown();
         
-        var cloudinary_links = [];
-        files.forEach(async(one)=>{
-            await cloudinary.v2.uploader.upload(one, async(err, result)=>{
-                if(err)
+        // var cloudinary_links = [];
+        var account_data;
+        var upload_to_cloudinary = ()=>
+        {
+            var images = [];
+            
+            files.forEach(async(one)=>{
+                await cloudinary.v2.uploader.upload(one, (err, result)=>{
+                    if(err)
+                    {
+                        console.log("Error noticed when uploading image to cloudinary.", error);
+                        return res.redirect("/");
+                    }
+                    else
+                    {
+                        var new_cloudinary_image = result.secure_url;
+                        
+                    sizeOf(one, function (err, dimensions) {
+                            var width = dimensions.width,
+                                height = dimensions.height;
+                            if(width < height)
+                            {
+                                new_cloudinary_image = new_cloudinary_image.split("/image/upload")[0] + "/image/upload/a_270" + new_cloudinary_image.split("/image/upload")[1];
+                            }
+                            images.push(new_cloudinary_image);
+                            console.log(new_cloudinary_image);
+                        });
+                    }
+                });
+            });
+            console.log(images);
+            return images;
+        }
+        Account.findOne({"mac_address": MAC.toLowerCase()}).exec(async(err, foundAccount)=>{
+            if(err)
+            {
+                throw err;
+            }
+            if(!foundAccount)
+            {
+                var new_account = 
                 {
-                    console.log("Error noticed when uploading image to cloudinary.", error);
-                    return res.redirect("/");
+                    mac_address : MAC.toLowerCase(),
+                    times_used : 1,
+                    images_taken : files.length,
+                    email_address : req.body.email_address,
+                    last_used : now_pretty,
+                    image_list : upload_to_cloudinary()
                 }
-                else
+                var create_account = ()=>
                 {
-                    var new_cloudinary_image = result.secure_url;
-                    
-                   sizeOf(one, function (err, dimensions) {
-                        var width = dimensions.width,
-                            height = dimensions.height;
-                        if(width < height)
+                    Account.create(new_account, (err, newAccount)=>{
+                        if(err)
                         {
-                            new_cloudinary_image = new_cloudinary_image.split("/image/upload")[0] + "/image/upload/a_270" + new_cloudinary_image.split("/image/upload")[1];
-                        }
-                        cloudinary_links.push(new_cloudinary_image);
-                        console.log(new_cloudinary_image);
-                        doc.image(new_cloudinary_image, {
-                            fit: [500, 500],
-                            align: 'center',
-                            valign: 'center',
-                            rotate:90
-                            });
-                            doc.rotate(90, {origin : [0, 0]});
-                        doc.addPage();
-                        doc.moveDown();
-                        if(cloudinary_links.length == files.length)
-                        {
-                            doc.moveDown();
-                            doc.moveDown();
-
-                            doc.fontSize(13);
-                            doc.text("Generated by Crammer",
+                            if(err.code === 11000)
                             {
-                                width : 410,
-                                align:'center'
-                            });
-                            doc.fontSize(9);
-                            doc.moveDown();
-
-                            doc.text("https://crammer_ai.herokuapp.com",
-                            {
-                                width : 410,
-                                align:'center'
-                            });
-                            doc.moveDown();
-                            doc.moveDown();
-
-                            doc.text("A Qasim Wani Product, https://github.com/QasimWani/Crammer",
-                            {
-                                width:410,
-                                align:'center'
-                            });
-
-                            doc.end();
-                                                
-                            Account.findOne({"mac_address": MAC.toLowerCase()}).exec((err, foundAccount)=>{
-                                if(err)
-                                {
-                                    throw err;
-                                }
-                                if(!foundAccount)
-                                {
-                                    var new_account = 
+                                console.log("Duplicate index error.");
+                                Account.collection.dropIndex("username_1", (err, index_drop)=>{
+                                    if(err)
                                     {
-                                        mac_address : MAC.toLowerCase(),
-                                        times_used : 1,
-                                        images_taken : files.length,
-                                        email_address : req.body.email_address,
-                                        last_used : now_pretty
-                                    }
-                                    var create_account = ()=>
-                                    {
-                                        Account.create(new_account, (err, newAccount)=>{
-                                            if(err)
-                                            {
-                                                if(err.code === 11000)
-                                                {
-                                                    console.log("Duplicate index error.");
-                                                    Account.collection.dropIndex("username_1", (err, index_drop)=>{
-                                                        if(err)
-                                                        {
-                                                            throw new Error(err.message);
-                                                        }
-                                                        create_account();
-                                                    });
-                                                }
-                                                else
-                                                {
-                                                    throw new Error(err.message);
-                                                }
-                                            }
-                                            else
-                                            {
-                                                console.log("New user created and logged in with MAC address and email address. Time = ", now_pretty);
-                                            }
-
-                                        });
+                                        throw new Error(err.message);
                                     }
                                     create_account();
-                                }
-                                else
-                                {
-                                    foundAccount.times_used += 1;
-                                    foundAccount.last_used = now_pretty;
-                                    foundAccount.images_taken += files.length;
-                                    foundAccount.save();
-                                    console.log("Updated Previous Users' data.");
-                                }
-                            });
-                            var file_name = './public/uploads/'+req.body.assignment_name + '.pdf';
-                                middleware_mail.send_PDF_file(req.body.email_address, date, req.body.assignment_name + ".pdf", file_name);
-                            return res.render("index",{err:"Sent you an email!"});
+                                });
+                            }
+                            else
+                            {
+                                throw new Error(err.message);
+                            }
                         }
+                        else
+                        {
+                            console.log("New user created and logged in with MAC address and email address. Time = ", now_pretty);
+                        }
+
                     });
                 }
-            });
+                create_account();
+            }
+            else
+            {
+                foundAccount.times_used += 1;
+                foundAccount.last_used = now_pretty;
+                foundAccount.images_taken += files.length;
+                foundAccount.image_list = upload_to_cloudinary();
+                foundAccount.save();
+                console.log("Updated Previous Users' data.");
+            }
+            account_data = foundAccount;
+            console.log(account_data);
         });
-        return res.render("index",{err:"Sent you an email!"});
+        
+    }
+
+        // files.forEach(async(one)=>{
+        //     await cloudinary.v2.uploader.upload(one, (err, result)=>{
+        //         if(err)
+        //         {
+        //             console.log("Error noticed when uploading image to cloudinary.", error);
+        //             return res.redirect("/");
+        //         }
+        //         else
+        //         {
+        //             var new_cloudinary_image = result.secure_url;
+                    
+        //            sizeOf(one, function (err, dimensions) {
+        //                 var width = dimensions.width,
+        //                     height = dimensions.height;
+        //                 if(width < height)
+        //                 {
+        //                     new_cloudinary_image = new_cloudinary_image.split("/image/upload")[0] + "/image/upload/a_270" + new_cloudinary_image.split("/image/upload")[1];
+        //                 }
+        //                 cloudinary_links.push(new_cloudinary_image);
+        //                 console.log(new_cloudinary_image);
+        //                 request(new_cloudinary_image,async(err, body, response)=>{
+        //                     if (!err && response.statusCode == 200) {
+        //                         var data = "data:" + response.headers["content-type"] + ";base64," + new Buffer(body).toString('base64');
+        //                         console.log(data);
+
+                                // var one_image = doc.openImage(data);
+                                // console.log(data);
+                                // doc.image(one_image, {
+                                //     fit: [500, 500],
+                                //     align: 'center',
+                                //     valign: 'center',
+                                // });
+                                // doc.addPage();
+                                // doc.moveDown();
+                                //if(cloudinary_links.length == files.length)
+                                //{
+                            //         doc.moveDown();
+                            //         doc.moveDown();
+                            //         doc.fontSize(13);
+                            //         doc.text("Generated by Crammer",
+                            //         {
+                            //             width : 410,
+                            //             align:'center'
+                            //         });
+                            //         doc.fontSize(9);
+                            //         doc.moveDown();
+                            //         doc.text("https://crammer_ai.herokuapp.com",
+                            //         {
+                            //             width : 410,
+                            //             align:'center'
+                            //         });
+                            //         doc.moveDown();
+                            //         doc.moveDown();
+                            //         doc.text("A Qasim Wani Product, https://github.com/QasimWani/Crammer",
+                            //         {
+                            //             width:410,
+                            //             align:'center'
+                            //         });
+        
+                            //         doc.end();
+                                                        
+                            
+                            //         var file_name = './public/uploads/'+req.body.assignment_name + '.pdf';
+                            //             middleware_mail.send_PDF_file(req.body.email_address, date, req.body.assignment_name + ".pdf", file_name);
+                            //         return res.render("index",{err:"Sent you an email!"});
+                            //     }
+                            // }
+                            // else
+                            // {
+                            //     console.log("Fuck, this didn't work...");
+                //             }
+                //         });
+                //     });
+                // }
+            // });
+        // });
+        // return res.render("index",{err:"Sent you an email!"});
 
         // console.log("Plz work?");
         // console.log(cloudinary_links);        
@@ -318,7 +367,6 @@ if(req.files == undefined)
         // py.stdin.write(JSON.stringify(data));
         // py.stdin.end();
         
-        console.log("Goes here...");
 
     //     Account.findOne({"mac_address": MAC.toLowerCase()}).exec((err, foundAccount)=>{
     //         if(err)
@@ -377,7 +425,8 @@ if(req.files == undefined)
     //     var file_name = './public/uploads/'+req.body.assignment_name + '.pdf';
     //         middleware_mail.send_PDF_file(req.body.email_address, date, req.body.assignment_name + ".pdf", file_name);
     // return res.render("index",{err:"Sent you an email!"});
-    }
+    // }
+    return res.send(account_data);
 });        
 
 module.exports = router;
