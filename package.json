@@ -48,7 +48,7 @@
     "graphicsmagick": "0.0.1",
     "image-size": "^0.8.3",
     "jimp": "^0.8.5",
-    "jspdf": "^1.5.3",
+    "jspdf": "^2.5.1",
     "memorystore": "^1.6.1",
     "method-override": "^3.0.0",
     "moment": "^2.24.0",
